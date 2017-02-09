@@ -74,7 +74,8 @@ inline std::vector<uniface<CONFIG> *> create_uniface( std::string domain, std::v
             if( comm_rank == 0 ) printf( "> setting up interface %s [%08X]\n", map[i].c_str(), i );
             std::string full_uri( "mpi://" );
             full_uri = full_uri + domain + "/" + map[i];
-            unifaces.push_back( new uniface<CONFIG>( new comm_mpi_smart( full_uri.c_str(), comm_ifs ) ) );
+            //unifaces.push_back( new uniface<CONFIG>( new comm_mpi_smart( full_uri.c_str(), comm_ifs ) ) );
+			unifaces.push_back( new uniface<CONFIG>( new comm_mpi_smart( full_uri.c_str(), comm_ifs ), map[i] ) );
         } else {
             MPI_Comm_split( world, 0, global_rank, &comm_ifs );
         }

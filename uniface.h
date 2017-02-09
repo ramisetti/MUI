@@ -93,6 +93,7 @@ private:
 	};
 
 private: // data members
+	std::string ifs;
 	std::unique_ptr<communicator> comm;
 	dispatcher<message::id_type, std::function<void(message)> > readers;
 
@@ -110,7 +111,7 @@ private: // data members
 	std::mutex mutex;
 public:
 	uniface( const char URI[] ) : uniface( comm_factory::create_comm(URI) ) {}
-	uniface( std::string const &URI ) : uniface( comm_factory::create_comm(URI.c_str()) ) {}
+	uniface( std::string const &URI ) : uniface(comm_factory::create_comm(URI.c_str()) ) {}
 	uniface( communicator* comm_ ) : comm(comm_) {
 		using namespace std::placeholders;
 
@@ -125,7 +126,28 @@ public:
 				std::bind(&uniface::on_send_span, this, _1, _2, _3, _4)));
 		readers.link("data", reader_variables<time_type, frame_type>(
 		             std::bind(&uniface::on_recv_data, this, _1, _2)));
+
 	}
+
+	uniface( communicator* comm_, std::string str ) : comm(comm_) {
+		using namespace std::placeholders;
+
+		peers.resize(comm->remote_size());
+		readers.link("timestamp", reader_variables<int32_t, time_type>(
+		             std::bind(&uniface::on_recv_confirm, this, _1, _2)));
+		readers.link("forecast", reader_variables<int32_t, time_type>(
+		             std::bind(&uniface::on_recv_forecast, this, _1, _2)));
+		readers.link("receiving span", reader_variables<int32_t, time_type, time_type, span_t>(
+		             std::bind(&uniface::on_recv_span, this, _1, _2, _3, _4)));
+		readers.link("sending span", reader_variables<int32_t, time_type, time_type, span_t>(
+				std::bind(&uniface::on_send_span, this, _1, _2, _3, _4)));
+		readers.link("data", reader_variables<time_type, frame_type>(
+		             std::bind(&uniface::on_recv_data, this, _1, _2)));
+
+		ifs=str;
+	}
+
+	std::string getIFS(){return ifs;}
 
 	uniface( const uniface& ) = delete;
 	uniface& operator=( const uniface& ) = delete;
